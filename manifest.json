@@ -1,0 +1,23 @@
+{
+	"manifest_version": 2,
+	"name": "Статистика группы",
+	"description": "Оценивает успешность данной группы ВК на основе последних 100 постов",
+	"version": "1.0.3",
+	"icons": {"512": "icon.png"},
+
+	"permissions": [ "contextMenus", "storage" , "https://vk.com/*", "https://*.vk.com/*" ],
+	"web_accessible_resources": ["/update.png", "/popup.js"],
+	
+	"browser_action": {
+        "default_title": "Настройка",
+        "default_popup": "/popup.html"
+    },
+	
+	"content_scripts": [
+   {
+   "matches": [ "*://*/*" ],
+    "js": ["content.js" ]
+	}
+ ]
+  
+}
