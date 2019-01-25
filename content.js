@@ -20,7 +20,7 @@ var Tokens = [
 
 ("use strict");
 
-const RESERVED = ["im", "groups", "feed", "friends", "video", "docs", "apps", "search"];
+const RESERVED = ["im", "groups", "feed", "friends", "video", "docs", "apps", "search", "vkpay"];
 
 let FORMULA = "100 * (likes + 1.5 * reposts + 2 * comments ) / views"; //формула
 
