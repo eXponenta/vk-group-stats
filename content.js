@@ -26,7 +26,7 @@ const IGNORE_PINNED = false;
 const IGNORE_ADS = true;
 
 let MAX_POSTS = 100; //100 - maximum
-let MAX_DELTA_DAYS = 60;
+let MAX_PERIOD = 60;
 
 const INJECTED_TEMPLATE = `
     <aside aria-label="Стaтистика">
@@ -72,6 +72,7 @@ const INJECTED_TEMPLATE = `
 	}
 
 	function updateStatView(stat) {
+
 		let text = crtItm("Период", Math.round(stat.period) + " д.");
 		text += crtItm("Постов за период", stat.posts);
 		text += crtItm("Лайков", stat.likes, stat.likes / stat.users);
@@ -120,29 +121,38 @@ const INJECTED_TEMPLATE = `
 				var data = new Date(1000 * item.date);
 				var deltaDays = Date.daysBetween(data, now);
 				if ((IGNORE_PINNED && item.is_pinned) || (IGNORE_ADS && item.marked_as_ads)) return false;
-				return deltaDays < MAX_DELTA_DAYS;
+				return deltaDays < MAX_PERIOD;
 			});
 			// }
 
+            loader_elem.style.display = "none";
+            data_elem.style.display = "block";
+            
+            var stat = {
+				lastPost: new Date(),// new Date(1000 * posts[0].date),
+				firstPost: new Date(), // new Date(1000 * posts[posts.length - 1].date),
+				likes: 0,
+				comments: 0,
+				reposts: 0,
+				views: 0,
+				period: MAX_PERIOD,
+				users: r[1].response.count || 0,
+				posts: posts.length
+            };
+            
 			if (posts.length == 0) {
+                updateStatView(stat);
 				return;
-			}
+            }
+
+            stat.lastPost = new Date(1000 * posts[0].date);
+            stat.firstPost = new Date(1000 * posts[posts.length - 1].date);
 
 			posts = posts.sort((a, b) => {
 				return b.date - a.date;
 			});
 
-			var stat = {
-				lastPost: new Date(1000 * posts[0].date),
-				firstPost: new Date(1000 * posts[posts.length - 1].date),
-				likes: 0,
-				comments: 0,
-				reposts: 0,
-				views: 0,
-				period: 0,
-				users: r[1].response.count || 0,
-				posts: posts.length
-			};
+			
 			stat.period = Date.daysBetween(stat.firstPost, stat.lastPost);
 
 			posts.forEach(p => {
@@ -156,8 +166,6 @@ const INJECTED_TEMPLATE = `
 				console.log(p + ":" + stat[p]);
 			}
 
-			loader_elem.style.display = "none";
-			data_elem.style.display = "block";
 
 			updateStatView(stat);
 		}).catch(r => {
@@ -257,8 +265,13 @@ const INJECTED_TEMPLATE = `
 	window.addEventListener(
 		"load",
 		() => {
-			VKREST.init(Tokens);
-
+            VKREST.init(Tokens);
+            storage.get(["FORMULA", "POSTS", "PERIOD"], it => {
+                FORMULA = it.FORMULA || FORMULA;
+                MAX_POSTS = it.POSTS || MAX_POSTS;
+                MAX_PERIOD = it.PERIOD || MAX_PERIOD;
+            });
+            
 			const observer = new MutationObserver(() => {
 				injectSidebar();
 			});
@@ -269,13 +282,12 @@ const INJECTED_TEMPLATE = `
 		false
 	);
 
-	chrome.storage.onChanged.addListener(data => {
-		if (data.FORMULA) {
-			FORMULA = data.FORMULA.newValue;
-		}
-		if (data.POSTS) {
-			MAX_POSTS = data.POSTS.newValue;
-		}
+	chrome.storage.onChanged.addListener(it => {
+
+        FORMULA = it.FORMULA ? it.FORMULA.newValue : FORMULA;
+        MAX_POSTS = it.POSTS ? it.POSTS.newValue : MAX_POSTS  ;
+        MAX_PERIOD = it.PERIOD ? it.PERIOD.newValue : MAX_PERIOD;
+
 		updateGroupStats(latestGroupID);
 	});
 })();
