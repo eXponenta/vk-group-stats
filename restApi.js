@@ -29,7 +29,7 @@ var VKREST = (function() {
         });
         xhr.addEventListener("error", rej);
 
-        const data = `${VK_REST}${req}&access_token=${getCurrentToken()}&v=5.92`;
+        const data = `${VK_REST}${req}access_token=${getCurrentToken()}&v=5.92`;
         xhr.open("GET", data, true);
         xhr.responseType = "json";
         xhr.send();
@@ -50,27 +50,35 @@ var VKREST = (function() {
         });
     }
 
-	function sendRequest(req) {
+	function sendRequest(method,req) {
         
         if (!TOKENS || TOKENS.length == 0) {
 			throw Error("Api can't inited!");
         }
         
+        let req_text = method + '?';
+        for(let key in req) {
+            req_text += `${key}=${req[key]}&`;
+        }
+
         startToken = currentToken;
         return new Promise((res, rej) =>{
-            trySend(req, res, rej)
+            trySend(req_text, res, rej)
 		});
 	}
 
 	function WallGet({ owner_id, count, extended = 0, offset = 0 }) {
 		 return sendRequest(
-			`wall.get?owner_id=${owner_id}&count=${count || 100}&extended=${extended}&offset=${offset}`
-		);
+			"wall.get",  {owner_id, count, extended, offset});//?owner_id=${owner_id}&count=${count || 100}&extended=${extended}&offset=${offset}`
 	}
 
-	function GroupsGetById(id) {
-		return sendRequest(`groups.getById?group_id=${id}`);
-	}
+	function GroupsGetById({group_id}) {
+		return sendRequest("groups.getById",{group_id});
+    }
+    
+    function GroupsgetMembers ({group_id, count = 0, offset = 0}){
+        return sendRequest("groups.getMembers", {group_id, count, offset})
+    }
 
 	return {
 		init: Init,
@@ -78,7 +86,8 @@ var VKREST = (function() {
 			get: WallGet
 		},
 		groups: {
-			getById: GroupsGetById
+            getById: GroupsGetById,
+            getMembers: GroupsgetMembers
 		}
 	};
 })();
