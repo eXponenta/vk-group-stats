@@ -13,9 +13,9 @@ var Tokens = [
 	"e046251de046251de046251dc0e02e63abee046e046251dbc0d4443f84c5e696c0674d8",
 	"8bdcb4068bdcb4068bdcb4062a8bb4f2be88bdc8bdcb406d797d58ee5333cbd7ab2fd90",
 	"3002050430020504300205047f306a43bd33002300205046c4964a026f25f49776d19ac",
-	'c1427e6cc1427e6cc1427e6ce7c12a5206cc142c1427e6c9d06adf1f9e9610efd4a995b',
-	'3dccbb243dccbb243dccbb24603dacfa5d33dcc3dccbb2467f10fc843946f2bc43c772c',
-	'be2f513dbe2f513dbe2f513d3bbe7189eebbe2fbe2f513de7f21ba46d8849d2c0f03dbd',
+	"c1427e6cc1427e6cc1427e6ce7c12a5206cc142c1427e6c9d06adf1f9e9610efd4a995b",
+	"3dccbb243dccbb243dccbb24603dacfa5d33dcc3dccbb2467f10fc843946f2bc43c772c",
+	"be2f513dbe2f513dbe2f513d3bbe7189eebbe2fbe2f513de7f21ba46d8849d2c0f03dbd"
 ];
 
 ("use strict");
@@ -64,11 +64,10 @@ const INJECTED_TEMPLATE = `
 	}
 
 	function crtItm(name, value, percent, style) {
-
-        let text = value != undefined ? value.toLocaleString() : "";
-        if(percent) {
-            text += ` (${(100.0 * percent).toFixed(2).toLocaleString()}%)`;
-        }
+		let text = value != undefined ? value.toLocaleString() : "";
+		if (percent) {
+			text += ` (${(100.0 * percent).toFixed(2).toLocaleString()}%)`;
+		}
 
 		return `<div class="page_actions_item" style = "${style || ""}">
             <span id="label" class="header_label" style="display:inline-block;">${name}:</span>
@@ -77,20 +76,23 @@ const INJECTED_TEMPLATE = `
 	}
 
 	function updateStatView(stat) {
-
 		let text = crtItm("Период", Math.round(stat.period) + " д.");
 		text += crtItm("Постов за период", stat.posts);
-		text += crtItm("Лайков", stat.likes, stat.likes / stat.users);
-		text += crtItm("Коммeнты", stat.comments, stat.comments / stat.users);
-		text += crtItm("Репостов", stat.reposts, stat.reposts / stat.users);
-        text += crtItm("Просмотры", stat.views);//, stat.views / stat.users);
-        const pp = Math.round(stat.views / stat.posts);
-        text += crtItm("Просм/пост", pp, pp / stat.users); 
+		text += crtItm("Лайков", stat.likes, stat.likes / stat.views);
+		text += crtItm("Коммeнты", stat.comments, stat.comments / stat.views);
+		text += crtItm("Репостов", stat.reposts, stat.reposts / stat.views);
+		text += crtItm("Просмотры", stat.views); //, stat.views / stat.users);
+		const pp = Math.round(stat.views / stat.posts);
+		text += crtItm("Просм/пост", pp, pp / stat.users);
 		text += crtItm("Постов/сутки", (stat.posts / stat.period).toFixed(2));
-        text += crtItm("ER", calcER(stat).toFixed(2) + "%", undefined ,
-        "font-weight:bolder; border-top:1px #939393 solid;");
-        
-        text += `<button id="force_update" class="flat_button button_wide">Обновить</button>`;
+		text += crtItm(
+			"ER",
+			calcER(stat).toFixed(2) + "%",
+			undefined,
+			"font-weight:bolder; border-top:1px #939393 solid;"
+		);
+
+		text += `<button id="force_update" class="flat_button button_wide">Обновить</button>`;
 
 		injectedParentElement.querySelector("#data_block").innerHTML = text;
 		injectedParentElement.querySelector("#data_block > #force_update").addEventListener(
@@ -121,6 +123,11 @@ const INJECTED_TEMPLATE = `
 		all.then(r => {
 			var data = r[0].response;
 			var posts = data.items;
+
+			posts = posts.sort((a, b) => {
+				return b.date - a.date;
+			});
+
 			// if(posts.length < 100) {
 			posts = posts.filter(item => {
 				var data = new Date(1000 * item.date);
@@ -130,11 +137,11 @@ const INJECTED_TEMPLATE = `
 			});
 			// }
 
-            loader_elem.style.display = "none";
-            data_elem.style.display = "block";
-            
-            var stat = {
-				lastPost: new Date(),// new Date(1000 * posts[0].date),
+			loader_elem.style.display = "none";
+			data_elem.style.display = "block";
+
+			var stat = {
+				lastPost: new Date(), // new Date(1000 * posts[0].date),
 				firstPost: new Date(), // new Date(1000 * posts[posts.length - 1].date),
 				likes: 0,
 				comments: 0,
@@ -143,21 +150,15 @@ const INJECTED_TEMPLATE = `
 				period: MAX_PERIOD,
 				users: r[1].response.count || 0,
 				posts: posts.length
-            };
-            
+			};
+
 			if (posts.length == 0) {
-                updateStatView(stat);
+				updateStatView(stat);
 				return;
-            }
-
-           
-
-			posts = posts.sort((a, b) => {
-				return b.date - a.date;
-			});
+			}
 
 			stat.lastPost = new Date(1000 * posts[0].date);
-            stat.firstPost = new Date(1000 * posts[posts.length - 1].date);
+			stat.firstPost = new Date(1000 * posts[posts.length - 1].date);
 			stat.period = Date.daysBetween(stat.firstPost, stat.lastPost);
 
 			posts.forEach(p => {
@@ -171,7 +172,6 @@ const INJECTED_TEMPLATE = `
 				console.log(p + ":" + stat[p]);
 			}
 
-
 			updateStatView(stat);
 		}).catch(r => {
 			updateStatViewError(r);
@@ -180,12 +180,19 @@ const INJECTED_TEMPLATE = `
 
 	function updateStatViewError(res) {
 		console.log("VK API ERROR:", res);
-		
+
 		let err = "Произошла ошибка!";
 		let mesg = "Смотри консоль.";
 
-		if(res.error && res.error.error_code){
-			err =  `Ошибка ${res.error.error_code}`;
+
+		if (res.error && res.error.error_code) {
+			
+			if(res.error.error_code == 100) {
+				injectedParentElement.style.display = "none";
+				return;
+			}
+
+			err = `Ошибка ${res.error.error_code}`;
 			mesg = res.error.error_msg;
 		}
 
@@ -279,13 +286,13 @@ const INJECTED_TEMPLATE = `
 	window.addEventListener(
 		"load",
 		() => {
-            VKREST.init(Tokens, {random: SELECT_RANDOM_TOKEN});
-            storage.get(["FORMULA", "POSTS", "PERIOD"], it => {
-                FORMULA = it.FORMULA || FORMULA;
-                MAX_POSTS = it.POSTS || MAX_POSTS;
-                MAX_PERIOD = it.PERIOD || MAX_PERIOD;
-            });
-            
+			VKREST.init(Tokens, { random: SELECT_RANDOM_TOKEN });
+			storage.get(["FORMULA", "POSTS", "PERIOD"], it => {
+				FORMULA = it.FORMULA || FORMULA;
+				MAX_POSTS = it.POSTS || MAX_POSTS;
+				MAX_PERIOD = it.PERIOD || MAX_PERIOD;
+			});
+
 			const observer = new MutationObserver(() => {
 				injectSidebar();
 			});
@@ -297,10 +304,9 @@ const INJECTED_TEMPLATE = `
 	);
 
 	chrome.storage.onChanged.addListener(it => {
-
-        FORMULA = it.FORMULA ? it.FORMULA.newValue : FORMULA;
-        MAX_POSTS = it.POSTS ? it.POSTS.newValue : MAX_POSTS  ;
-        MAX_PERIOD = it.PERIOD ? it.PERIOD.newValue : MAX_PERIOD;
+		FORMULA = it.FORMULA ? it.FORMULA.newValue : FORMULA;
+		MAX_POSTS = it.POSTS ? it.POSTS.newValue : MAX_POSTS;
+		MAX_PERIOD = it.PERIOD ? it.PERIOD.newValue : MAX_PERIOD;
 
 		updateGroupStats(latestGroupID);
 	});
