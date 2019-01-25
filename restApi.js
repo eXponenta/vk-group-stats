@@ -13,8 +13,14 @@ var VKREST = (function() {
         return getCurrentToken();
     }
 
-	function Init(tokens) {
-		TOKENS = tokens;
+	function Init(tokens, options) {
+        TOKENS = tokens;
+        if(options) {
+            if(options.random){
+                currentToken = Math.round(Math.random() * TOKENS.length);
+                console.log(`Selected rundom token ${currentToken}`, getCurrentToken());
+            }
+        }
     }
     
     function createXHR(req, res, rej) {

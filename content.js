@@ -1,19 +1,22 @@
 //Список Ваших токенов для доступа к API ВК (токен приложения)
 var Tokens = [
-	"227b77f1227b77f1227b77f1b8221c8a3a2227b227b77f17e43f3ee1c179ebd44344710",
-	"b38ace8bb38ace8bb38ace8b91b3e2eefbbb38ab38ace8befcb77aca07bbfbedef17505",
-	"fea3652ffea3652ffea3652ff9fecb4552ffea3fea3652fa2e2d9895abe71783b9695d7",
-	"9e91edd69e91edd69e91edd6fe9ef9cc9e99e919e91edd6c2d00d82662e542b26f93d66",
-	"65175abd65175abd65175abdfd657f7bef6651765175abd3956bb1d579161e679c65fa6",
-	"d700baf0d700baf0d700baf0aed7659742dd700d700baf08c46179d06f4b53a950d06f9",
-	"3dccbb243dccbb243dccbb24603dacfa5d33dcc3dccbb2467f10fc843946f2bc43c772c",
-	"be2f513dbe2f513dbe2f513d3bbe7189eebbe2fbe2f513de7f21ba46d8849d2c0f03dbd",
-	"e56db1dde56db1dde56db1dd14e57061f0ee56de56db1ddb92c57ed593649d33deb32e7",
-	"a632e070a632e070a632e07096a65ac1a0aa632a632e070fa73146ce8fa76d533bf7d04",
-	"f1a40e4cf1a40e4cf1a40e4c5df1cc2d70ff1a4f1a40e4cade63571f3ef90b1fce09174",
-	"c1427e6cc1427e6cc1427e6ce7c12a5206cc142c1427e6c9d06adf1f9e9610efd4a995b"
+	"06740f3006740f3006740f30d0061c49af0067406740f305a3f5141aecd2b7cbab35b32",
+	"105b2545105b2545105b25456a103363e01105b105b25454c107a7d114e205f4f8c4f79",
+	"4b203d364b203d364b203d36dc4b487b9044b204b203d36176b6261da194e5415beb80d",
+	"58eb554658eb554658eb5546d8588cada5558eb58eb554604dc66e3469d0acc0894a5fb",
+	"965f1d25965f1d25965f1d250096375b8b9965f965f1d25ca147d7690032d953aa64239",
+	"b944403bb944403bb944403b32b92c0694bb944b944403be50f204c08cd4fb3b10e22a9",
+	"1c3bb4521c3bb4521c3bb452a01c53f2e311c3b1c3bb4524070d4c49518055ccc95d3cd",
+	"3d1c1b293d1c1b293d1c1b29493d745d9a33d1c3d1c1b2961577bf581d885342e8cb339",
+	"9bb8dffb9bb8dffb9bb8dffbb89bd0994f99bb89bb8dffbc7f3bf014d09340533e579f2",
+	"c1767e21c1767e21c1767e219cc11e3894cc176c1767e219d3d1f3db3195cb7f66c5005",
+	"e046251de046251de046251dc0e02e63abee046e046251dbc0d4443f84c5e696c0674d8",
+	"8bdcb4068bdcb4068bdcb4062a8bb4f2be88bdc8bdcb406d797d58ee5333cbd7ab2fd90",
+	"3002050430020504300205047f306a43bd33002300205046c4964a026f25f49776d19ac",
+	'c1427e6cc1427e6cc1427e6ce7c12a5206cc142c1427e6c9d06adf1f9e9610efd4a995b',
+	'3dccbb243dccbb243dccbb24603dacfa5d33dcc3dccbb2467f10fc843946f2bc43c772c',
+	'be2f513dbe2f513dbe2f513d3bbe7189eebbe2fbe2f513de7f21ba46d8849d2c0f03dbd',
 ];
-//	"58eb554658eb554658eb5546d8588cada5558eb58eb554604dc66e3469d0acc0894a5fb",
 
 ("use strict");
 
@@ -22,11 +25,13 @@ const RESERVED = ["im", "groups", "feed", "friends", "video", "docs", "apps"];
 let FORMULA = "100 * (likes + 1.5 * reposts + 2 * comments ) / views"; //формула
 
 const storage = chrome.storage.sync;
-const IGNORE_PINNED = false;
-const IGNORE_ADS = true;
 
-let MAX_POSTS = 100; //100 - maximum
-let MAX_PERIOD = 60;
+const IGNORE_PINNED = false; //не считать запиненный
+const IGNORE_ADS = true; //не считать рекламные
+const SELECT_RANDOM_TOKEN = true; // true - при инициализации (открытии страницы) буде случайный из набора
+
+let MAX_POSTS = 100; // стандартное значение, выставляется в настройках
+let MAX_PERIOD = 60; // стандартное значение, выставляется в настройках
 
 const INJECTED_TEMPLATE = `
     <aside aria-label="Стaтистика">
@@ -145,14 +150,14 @@ const INJECTED_TEMPLATE = `
 				return;
             }
 
-            stat.lastPost = new Date(1000 * posts[0].date);
-            stat.firstPost = new Date(1000 * posts[posts.length - 1].date);
+           
 
 			posts = posts.sort((a, b) => {
 				return b.date - a.date;
 			});
 
-			
+			stat.lastPost = new Date(1000 * posts[0].date);
+            stat.firstPost = new Date(1000 * posts[posts.length - 1].date);
 			stat.period = Date.daysBetween(stat.firstPost, stat.lastPost);
 
 			posts.forEach(p => {
@@ -175,15 +180,24 @@ const INJECTED_TEMPLATE = `
 
 	function updateStatViewError(res) {
 		console.log("VK API ERROR:", res);
+		
+		let err = "Произошла ошибка!";
+		let mesg = "Смотри консоль.";
+
+		if(res.error && res.error.error_code){
+			err =  `Ошибка ${res.error.error_code}`;
+			mesg = res.error.error_msg;
+		}
 
 		injectedParentElement.querySelector("#loader").style.display = "none";
 		const data = injectedParentElement.querySelector("#data_block");
 		data.style.display = "block";
-		data.innerHTML = `<span style="color: #f15a5a;font-weight: bold;display: block;margin-bottom: 10px;">
-            Ошибка ${res.error.error_code}:
+		data.innerHTML = `
+		<span style="color: #f15a5a;font-weight: bold;display: block;margin-bottom: 10px;">
+			${err}   
         </span>
         <span style="color: #f15a5a;font-weight: 100;display: block;margin-bottom: 10px;">
-            ${res.error.error_msg}
+            ${mesg}
         </span>
         <button id="force_update" class="flat_button button_wide">Повторить</button>`;
 		data.querySelector("#force_update").addEventListener(
@@ -265,7 +279,7 @@ const INJECTED_TEMPLATE = `
 	window.addEventListener(
 		"load",
 		() => {
-            VKREST.init(Tokens);
+            VKREST.init(Tokens, {random: SELECT_RANDOM_TOKEN});
             storage.get(["FORMULA", "POSTS", "PERIOD"], it => {
                 FORMULA = it.FORMULA || FORMULA;
                 MAX_POSTS = it.POSTS || MAX_POSTS;
