@@ -2,17 +2,15 @@
 	"manifest_version": 2,
 	"name": "Статистика группы",
 	"description": "Оценивает успешность данной группы ВК на основе последних 100 постов",
-	"version": "1.1.6",
+	"version": "1.1.7",
 	"icons": { "512": "icon.png" },
-
+	"author": "eXponenta",
 	"permissions": ["contextMenus", "storage", "https://vk.com/*", "https://*.vk.com/*"],
 	"web_accessible_resources": ["/update.png", "/popup.js"],
-
 	"browser_action": {
 		"default_title": "Настройка",
 		"default_popup": "/popup.html"
 	},
-
 	"content_scripts": [
 		{
 			"matches": ["*://*/*"],
