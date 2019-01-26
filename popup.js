@@ -3,10 +3,12 @@
 var chrome = window.chrome || {};
 chrome.storage = chrome.storage || {
 	sync: {
-			get: () => {},
-			set: () => {}
-		}
+		get: () => {},
+		set: () => {}
+	}
 };
+
+const dc = document.querySelector.bind(document);
 
 window.addEventListener("load", () => {
 	const storage = chrome.storage.sync;
@@ -14,11 +16,35 @@ window.addEventListener("load", () => {
 	var max_posts = 100;
 	var max_period = 60;
 
-	var conduction_inp = document.querySelector("#FORML");
-	var count_inp = document.querySelector("#POSTS");
-	var period_inp = document.querySelector("#period");
+	const conduction_inp = dc("#FORML");
+	const count_inp = dc("#POSTS");
+	const period_inp = dc("#period");
+	const settings_view = dc("div.settings");
 
-	storage.get(["FORMULA", "POSTS", "PERIOD"], it => {
+	settings_view.setEnabled = function(state) {
+		if (state) {
+			this.classList.remove("disabled");
+		} else {
+			this.classList.add("disabled");
+		}
+	};
+
+	const toogle_inp = dc(".toggle-group > #cbx");
+
+	dc("#BUTTON").addEventListener("click", () => {
+		conduction = conduction_inp.value || conduction;
+		max_posts = count_inp.value || max_posts;
+		max_period = period_inp.value || max_period;
+
+		storage.set({ FORMULA: conduction, POSTS: max_posts, PERIOD: max_period });
+	});
+
+	toogle_inp.addEventListener("change", function(e) {
+		settings_view.setEnabled(this.checked);
+		storage.set({ ENABLED: !!this.checked });
+	});
+
+	storage.get(["FORMULA", "POSTS", "PERIOD", "ENABLED"], it => {
 		conduction = it.FORMULA || conduction;
 		conduction_inp.value = conduction;
 
@@ -27,21 +53,8 @@ window.addEventListener("load", () => {
 
 		max_period = it.PERIOD || max_period;
 		period_inp.value = max_period;
-	});
 
-	document.querySelector("#BUTTON").addEventListener("click", () => {
-		conduction = conduction_inp.value || conduction;
-		max_posts = count_inp.value || max_posts;
-		max_period = period_inp.value || max_period;
-
-		storage.set({ FORMULA: conduction, POSTS: max_posts, PERIOD: max_period });
-	});
-
-	document.querySelector(".toggle-group > #cbx").addEventListener("change",  function(e) {
-		if(this.checked) {
-			document.querySelector("div.settings").classList.remove("disabled");
-		} else {
-			document.querySelector("div.settings").classList.add("disabled");
-		}
+		toogle_inp.checked = it.ENABLED;
+		settings_view.setEnabled(it.ENABLED);
 	});
 });

@@ -5,7 +5,7 @@
 	"version": "1.1.13",
 	"icons": { "512": "icon.png" },
 	"author": "eXponenta",
-	"permissions": ["contextMenus", "storage", "https://vk.com/*", "https://*.vk.com/*"],
+	"permissions": ["contextMenus", "storage"],
 	"web_accessible_resources": ["/update.png", "/popup.js"],
 	"browser_action": {
 		"default_title": "Настройка",
@@ -13,8 +13,8 @@
 	},
 	"content_scripts": [
 		{
-			"matches": ["*://*/*"],
-			"js": ["restApi.js","content.js"]
+			"matches": ["https://vk.com/*", "https://*.vk.com/*"],
+			"js": ["restApi.js","settings.js","content.js"]
 		}
 	]
 }
