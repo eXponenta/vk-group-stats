@@ -104,6 +104,23 @@ const INJECTED_TEMPLATE = `
 		);
 	}
 
+	function getOrUpdatePanel() {
+		let parent = document.querySelector("#narrow_column");
+		injectedParentElement = document.querySelector("#injected_element");
+		if (!injectedParentElement) {
+			injectedParentElement = document.createElement("div");
+			injectedParentElement.classList.add("page_block");
+			injectedParentElement.id = "injected_element";
+			injectedParentElement.innerHTML = INJECTED_TEMPLATE;
+			parent.insertBefore(injectedParentElement, parent.children[2]);
+		} else {
+			console.log("Show latest injected");
+		}
+		injectedParentElement.style.display = "";
+
+		return injectedParentElement;
+	}
+
 	// update stats
 	function updateGroupStats(id) {
 		if (id <= 0) return;
@@ -132,7 +149,9 @@ const INJECTED_TEMPLATE = `
 			posts = posts.filter(item => {
 				var data = new Date(1000 * item.date);
 				var deltaDays = Date.daysBetween(data, now);
-				if ((IGNORE_PINNED && item.is_pinned) || (IGNORE_ADS && item.marked_as_ads)) return false;
+				if ((IGNORE_PINNED && item.is_pinned) || (IGNORE_ADS && item.marked_as_ads)) {
+					return false;
+				}
 				return deltaDays < MAX_PERIOD;
 			});
 			// }
@@ -159,6 +178,13 @@ const INJECTED_TEMPLATE = `
 
 			stat.lastPost = new Date(1000 * posts[0].date);
 			stat.firstPost = new Date(1000 * posts[posts.length - 1].date);
+	
+			for(let iter = posts.length - 1; iter >= 0; iter--) {
+				if(!posts[iter].is_pinned) {
+					stat.firstPost = new Date(1000 * posts[iter].date);
+					break;
+				}
+			}
 			stat.period = Date.daysBetween(stat.firstPost, stat.lastPost);
 
 			posts.forEach(p => {
@@ -184,10 +210,8 @@ const INJECTED_TEMPLATE = `
 		let err = "Произошла ошибка!";
 		let mesg = "Смотри консоль.";
 
-
 		if (res.error && res.error.error_code) {
-			
-			if(res.error.error_code == 100) {
+			if (res.error.error_code == 100) {
 				injectedParentElement.style.display = "none";
 				return;
 			}
@@ -252,33 +276,17 @@ const INJECTED_TEMPLATE = `
 			}
 		}
 
-		injectedParentElement = document.querySelector("#injected_element");
-		if (!injectedParentElement) {
-			injectedParentElement = document.createElement("div");
-			injectedParentElement.classList.add("page_block");
-			injectedParentElement.id = "injected_element";
-			injectedParentElement.innerHTML = INJECTED_TEMPLATE;
-			parent.insertBefore(injectedParentElement, parent.children[2]);
-		} else {
-			console.log("Show latest injected");
-		}
-		injectedParentElement.style.display = "";
-
 		VKREST.groups
 			.getById({ group_id: name })
 			.then(r => {
-				if (r.response && r.response.length > 0) {
-					latestGroupID = r.response[0].id;
-					updateGroupStats(latestGroupID);
-				} else {
-					console.log("Owner: " + name + " is'n group");
-					if (injectedParentElement) {
-						injectedParentElement.style.display = "none";
-					}
-				}
+				latestGroupID = r.response[0].id;
+
+				getOrUpdatePanel();
+				updateGroupStats(latestGroupID);
 			})
 			.catch(r => {
-				updateStatViewError(r);
+				console.warn("VK Error:", r);
+				//updateStatViewError(r);
 			});
 	}
 
