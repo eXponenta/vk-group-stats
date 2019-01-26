@@ -120,7 +120,7 @@ var VKREST = (function() {
 	}
 
 	return {
-		init: Init,
+		Init: Init,
 		wall: {
 			get: WallGet
 		},

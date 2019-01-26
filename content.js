@@ -4,16 +4,7 @@
 
 const RESERVED = ["im", "groups", "feed", "friends", "video", "docs", "apps", "search", "vkpay"];
 
-let FORMULA = "100 * (likes + 1.5 * reposts + 2 * comments ) / views"; //формула
-
-const storage = chrome.storage.sync;
-
-const IGNORE_PINNED = false; //не считать запиненный
-const IGNORE_ADS = true; //не считать рекламные
 const SELECT_RANDOM_TOKEN = true; // true - при инициализации (открытии страницы) буде случайный из набора
-
-let MAX_POSTS = 100; // стандартное значение, выставляется в настройках
-let MAX_PERIOD = 60; // стандартное значение, выставляется в настройках
 
 const INJECTED_TEMPLATE = `
     <aside aria-label="Стaтистика">
@@ -37,7 +28,7 @@ const INJECTED_TEMPLATE = `
 	let injectedParentElement;
 
 	function calcER({ likes, reposts, comments, views, period }) {
-		let cond = FORMULA.replace(/likes/g, likes);
+		let cond = SETTINGS.params.FORMULA.replace(/likes/g, likes);
 		cond = cond.replace(/reposts/g, reposts);
 		cond = cond.replace(/comments/g, comments);
 		cond = cond.replace(/views/g, views);
@@ -99,7 +90,6 @@ const INJECTED_TEMPLATE = `
 			console.log("Show latest injected");
 		}
 		injectedParentElement.style.display = "";
-
 		return injectedParentElement;
 	}
 
@@ -115,7 +105,7 @@ const INJECTED_TEMPLATE = `
 
 		var now = new Date();
 		const all = Promise.all([
-			VKREST.wall.get({ owner_id: -id, count: MAX_POSTS, extended: 1 }),
+			VKREST.wall.get({ owner_id: -id, count: SETTINGS.params.POSTS, extended: 1 }),
 			VKREST.groups.getMembers({ group_id: id })
 		]);
 
@@ -131,10 +121,10 @@ const INJECTED_TEMPLATE = `
 			posts = posts.filter(item => {
 				var data = new Date(1000 * item.date);
 				var deltaDays = Date.daysBetween(data, now);
-				if ((IGNORE_PINNED && item.is_pinned) || (IGNORE_ADS && item.marked_as_ads)) {
+				if ((SETTINGS.params.IGNORE_PINNED && item.is_pinned) || (SETTINGS.params.IGNORE_ADS && item.marked_as_ads)) {
 					return false;
 				}
-				return deltaDays < MAX_PERIOD;
+				return deltaDays < SETTINGS.params.PERIOD;
 			});
 			// }
 
@@ -148,7 +138,7 @@ const INJECTED_TEMPLATE = `
 				comments: 0,
 				reposts: 0,
 				views: 0,
-				period: MAX_PERIOD,
+				period: SETTINGS.params.PERIOD,
 				users: r[1].response.count || 0,
 				posts: posts.length
 			};
@@ -276,30 +266,24 @@ const INJECTED_TEMPLATE = `
 	window.addEventListener(
 		"load",
 		() => {
-			VKREST.init(SETTINGS.Tokens, { random: SELECT_RANDOM_TOKEN });
-			storage.get(["FORMULA", "POSTS", "PERIOD"], it => {
-				FORMULA = it.FORMULA || FORMULA;
-				MAX_POSTS = it.POSTS || MAX_POSTS;
-				MAX_PERIOD = it.PERIOD || MAX_PERIOD;
-			});
 
+			VKREST.Init(SETTINGS.Tokens, { random: SELECT_RANDOM_TOKEN });
+			SETTINGS.Init();
+			
+			SETTINGS.onChanged = (e) =>{
+				updateGroupStats(latestGroupID);
+				console.log("CALL");
+			};
+			
 			const observer = new MutationObserver(() => {
 				injectSidebar();
 			});
 			observer.observe(document, { subtree: true, attributes: true });
-
+			
 			console.log("hook page reloading");
 		},
 		false
 	);
-
-	chrome.storage.onChanged.addListener(it => {
-		FORMULA = it.FORMULA ? it.FORMULA.newValue : FORMULA;
-		MAX_POSTS = it.POSTS ? it.POSTS.newValue : MAX_POSTS;
-		MAX_PERIOD = it.PERIOD ? it.PERIOD.newValue : MAX_PERIOD;
-
-		updateGroupStats(latestGroupID);
-	});
 })();
 
 // --- extensions
