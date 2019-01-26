@@ -1,0 +1,137 @@
+html {
+    margin: 0px;
+    padding: 0px;
+}
+body {
+    width: 400px;
+    font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica Neue, sans-serif;
+    padding-top: 4px;
+}
+
+select,
+input {
+    font-family: inherit;
+    font-size: 12.5px;
+    margin: 0;
+    box-sizing: border-box;
+    white-space: nowrap;
+    outline: none;
+    display: block;
+    border: 1px solid #d3d9de;
+    padding: 7px 16px 8px;
+    border-radius: 4px;
+}
+
+input[type="button"] {
+    display: block;
+    cursor: pointer;
+    vertical-align: top;
+    line-height: 15px;
+    text-align: center;
+    text-decoration: none;
+    background-color: #5181b8;
+    color: #fff;
+    border: 0;
+    border-radius: 4px;
+    float: right;
+}
+span {
+    display: inline-block;
+    padding: 2px 0;
+}
+
+div {
+    box-sizing: border-box;
+}
+
+div.item {
+    margin-bottom: 10px;
+}
+
+.fw {
+    width: 100%;
+}
+
+div.item > div {
+    display: inline-flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: flex-end;
+}
+
+div.item > div > a {
+    color: gray;
+    font-size: 10px;
+}
+
+.toggle {
+    position: relative;
+    display: block;
+    width: 40px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transform: translate3d(0, 0, 0);
+  }
+
+  .toggle:before {
+    content: "";
+    position: relative;
+    top: 3px;
+    left: 3px;
+    width: 34px;
+    height: 14px;
+    display: block;
+    background: #9a999966;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+  }
+  .toggle span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    display: block;
+    background: #3480d8;
+    border-radius: 10px;
+    box-shadow: 0 3px 8px rgba(154, 153, 153, 0.5);
+    transition: all 0.2s ease;
+    padding: 0px;
+  }
+  .toggle span:before {
+    content: "";
+    position: absolute;
+    display: block;
+    margin: -18px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    transform: scale(0);
+    opacity: 1;
+    pointer-events: none;
+  }
+  
+  #cbx:checked + .toggle:before {
+    background: #75a9e6;
+  }
+  #cbx:checked + .toggle span {
+    background: #3480d8;
+    transform: translateX(20px);
+    transition: all 0.2s cubic-bezier(0.8, 0.4, 0.3, 1.25), background 0.15s ease;
+    box-shadow: 0 3px 8px #3480d88a;
+  }
+  #cbx:checked + .toggle span:before {
+    transform: scale(1);
+    opacity: 0;
+    transition: all 0.4s ease;
+  }
+
+  div.toggle-group {
+      display: inline-block;
+      float: right;
+  }
+
+  div.settings.disabled {
+      opacity: 0.4;
+      pointer-events: none;
+  }

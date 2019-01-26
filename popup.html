@@ -1,113 +1,60 @@
 <html>
 	<head>
-		<title>настройки</title>
+		<title>Hастройки</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" href="./style.css">
 
-		<style>
-			html {
-				margin: 0px;
-				padding: 0px;
-			}
-			body {
-				width: 400px;
-				font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica Neue, sans-serif;
-				padding-top: 4px;
-			}
-
-			select,
-			input {
-				font-family: inherit;
-				font-size: 12.5px;
-				margin: 0;
-				box-sizing: border-box;
-				white-space: nowrap;
-				outline: none;
-				display: block;
-				border: 1px solid #d3d9de;
-				padding: 7px 16px 8px;
-				border-radius: 4px;
-			}
-
-			input[type="button"] {
-				display: block;
-				cursor: pointer;
-				vertical-align: top;
-				line-height: 15px;
-				text-align: center;
-				text-decoration: none;
-				background-color: #5181b8;
-				color: #fff;
-				border: 0;
-				border-radius: 4px;
-				float: right;
-			}
-			span {
-				display: inline-block;
-				padding: 2px 0;
-			}
-
-			div {
-				box-sizing: border-box;
-			}
-
-			div.item {
-				margin-bottom: 10px;
-			}
-
-			.fw {
-				width: 100%;
-			}
-
-			div.item > div {
-				display: inline-flex;
-				flex-direction: column;
-				height: 100%;
-				justify-content: flex-end;
-			}
-
-			div.item > div > a {
-				color: gray;
-				font-size: 10px;
-			}
-		</style>
 	</head>
 
 	<body>
 		<div class="container">
-			<div class="item"><span>Формула:</span> <input type="text" id="FORML" value="a + b" class="fw" /></div>
 			<div class="item">
-				<span>Максимальное количество постов:</span>
-				<select id="POSTS" min="10" max="100" list="values" class="fw">
-					<option>10</option>
-					<option>30</option>
-					<option>50</option>
-					<option>80</option>
-					<option>100</option>
-					<option>500</option>
-					<option>1000</option>
-				</select>
-            </div>
-            <div class="item">
-                    <span>Максимальный период:</span>
-                    <select id="period" min="10" max="100" list="values" class="fw">
-                        <option value="10">10 дней</option>
-                        <option value="20">20 дней</option>
-                        <option value="30">30 дней</option>
-                        <option value="40">40 дней</option>
-                        <option value="50">50 дней</option>
-                        <option value="61">2 мес</option>
+				<label>
+					<span>Состояние:</span>
+					<div class="toggle-group">
+						<input type="checkbox" id="cbx" style="display:none"/>
+						<label for="cbx" class="toggle"><span></span>
+					</div>
+				</label>
+			</div>
+			<div class="settings">
+				<div class="item">
+					<span>Формула:</span>
+					<input type="text" id="FORML" value="a + b" class="fw" />
+				</div>
+				<div class="item">
+					<span>Максимальное количество постов:</span>
+					<select id="POSTS" min="10" max="100" list="values" class="fw">
+						<option>10</option>
+						<option>30</option>
+						<option>50</option>
+						<option>80</option>
+						<option>100</option>
+						<option>500</option>
+						<option>1000</option>
+					</select>
+				</div>
+				<div class="item">
+					<span>Максимальный период:</span>
+					<select id="period" min="10" max="100" list="values" class="fw">
+						<option value="10">10 дней</option>
+						<option value="20">20 дней</option>
+						<option value="30">30 дней</option>
+						<option value="40">40 дней</option>
+						<option value="50">50 дней</option>
+						<option value="61">2 мес</option>
 						<option value="92">3 мес</option>
 						<option value="182">6 мес</option>
 						<option value="365">1 год</option>
-                    </select>
-                </div>
-                
-			<div class="item" style="height:30px;">
-				<div><a href="https://github.com/eXponenta">Created by eXponenta</a></div>
-				<input type="button" id="BUTTON" value="Cохранить" />
+					</select>
+				</div>
+
+				<div class="item" style="height:30px;">
+					<div><a href="https://github.com/eXponenta">Created by eXponenta</a></div>
+					<input type="button" id="BUTTON" value="Cохранить" />
+				</div>
 			</div>
 		</div>
-
 		<script src="./popup.js"></script>
 	</body>
 </html>
