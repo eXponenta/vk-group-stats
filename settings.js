@@ -46,7 +46,6 @@ const SETTINGS = (function() {
 		if (typeof onChanged === "function") {
 			onChanged(params);
 		}
-		console.log("[SETTINGS]:", params);
 	}
 
 	return {

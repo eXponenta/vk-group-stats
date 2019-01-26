@@ -1,4 +1,5 @@
 //Список Ваших токенов для доступа к API ВК (токен приложения)
+// переехал в settings.js -> Tokens
 
 ("use strict");
 
@@ -23,11 +24,15 @@ const INJECTED_TEMPLATE = `
     </aside>`;
 
 (function() {
+
 	let latestGroupName = "";
 	let latestGroupID = 0;
 	let injectedParentElement;
+	let pageObserver;
+	let isInited = false;
 
-	function calcER({ likes, reposts, comments, views, period }) {
+	function CalcER({ likes, reposts, comments, views, period }) {
+
 		let cond = SETTINGS.params.FORMULA.replace(/likes/g, likes);
 		cond = cond.replace(/reposts/g, reposts);
 		cond = cond.replace(/comments/g, comments);
@@ -36,7 +41,8 @@ const INJECTED_TEMPLATE = `
 		return eval(cond);
 	}
 
-	function crtItm(name, value, percent, style) {
+	function CrtItm(name, value, percent, style) {
+
 		let text = value != undefined ? value.toLocaleString() : "";
 		if (percent) {
 			text += ` (${(100.0 * percent).toFixed(2).toLocaleString()}%)`;
@@ -48,19 +54,19 @@ const INJECTED_TEMPLATE = `
             </div>`;
 	}
 
-	function updateStatView(stat) {
-		let text = crtItm("Период", Math.round(stat.period) + " д.");
-		text += crtItm("Постов за период", stat.posts);
-		text += crtItm("Лайков", stat.likes, stat.likes / stat.views);
-		text += crtItm("Коммeнты", stat.comments, stat.comments / stat.views);
-		text += crtItm("Репостов", stat.reposts, stat.reposts / stat.views);
-		text += crtItm("Просмотры", stat.views); //, stat.views / stat.users);
+	function UpdateStatView(stat) {
+		let text = CrtItm("Период", Math.round(stat.period) + " д.");
+		text += CrtItm("Постов за период", stat.posts);
+		text += CrtItm("Лайков", stat.likes, stat.likes / stat.views);
+		text += CrtItm("Коммeнты", stat.comments, stat.comments / stat.views);
+		text += CrtItm("Репостов", stat.reposts, stat.reposts / stat.views);
+		text += CrtItm("Просмотры", stat.views); //, stat.views / stat.users);
 		const pp = Math.round(stat.views / stat.posts);
-		text += crtItm("Просм/пост", pp, pp / stat.users);
-		text += crtItm("Постов/сутки", (stat.posts / stat.period).toFixed(2));
-		text += crtItm(
+		text += CrtItm("Просм/пост", pp, pp / stat.users);
+		text += CrtItm("Постов/сутки", (stat.posts / stat.period).toFixed(2));
+		text += CrtItm(
 			"ER",
-			calcER(stat).toFixed(2) + "%",
+			CalcER(stat).toFixed(2) + "%",
 			undefined,
 			"font-weight:bolder; border-top:1px #939393 solid;"
 		);
@@ -71,14 +77,19 @@ const INJECTED_TEMPLATE = `
 		injectedParentElement.querySelector("#data_block > #force_update").addEventListener(
 			"click",
 			() => {
-				updateGroupStats(latestGroupID);
+				UpdateGroupStats(latestGroupID);
 			},
 			false
 		);
 	}
 
-	function getOrUpdatePanel() {
+	function GetOrUpdatePanel() {
+
 		let parent = document.querySelector("#narrow_column");
+		if (!parent) {
+			return (injectedParentElement = null);
+		}
+
 		injectedParentElement = document.querySelector("#injected_element");
 		if (!injectedParentElement) {
 			injectedParentElement = document.createElement("div");
@@ -94,7 +105,7 @@ const INJECTED_TEMPLATE = `
 	}
 
 	// update stats
-	function updateGroupStats(id) {
+	function UpdateGroupStats(id) {
 		if (id <= 0) return;
 
 		var loader_elem = injectedParentElement.querySelector("#loader");
@@ -121,7 +132,10 @@ const INJECTED_TEMPLATE = `
 			posts = posts.filter(item => {
 				var data = new Date(1000 * item.date);
 				var deltaDays = Date.daysBetween(data, now);
-				if ((SETTINGS.params.IGNORE_PINNED && item.is_pinned) || (SETTINGS.params.IGNORE_ADS && item.marked_as_ads)) {
+				if (
+					(SETTINGS.params.IGNORE_PINNED && item.is_pinned) ||
+					(SETTINGS.params.IGNORE_ADS && item.marked_as_ads)
+				) {
 					return false;
 				}
 				return deltaDays < SETTINGS.params.PERIOD;
@@ -144,15 +158,15 @@ const INJECTED_TEMPLATE = `
 			};
 
 			if (posts.length == 0) {
-				updateStatView(stat);
+				UpdateStatView(stat);
 				return;
 			}
 
 			stat.lastPost = new Date(1000 * posts[0].date);
 			stat.firstPost = new Date(1000 * posts[posts.length - 1].date);
-	
-			for(let iter = posts.length - 1; iter >= 0; iter--) {
-				if(!posts[iter].is_pinned) {
+
+			for (let iter = posts.length - 1; iter >= 0; iter--) {
+				if (!posts[iter].is_pinned) {
 					stat.firstPost = new Date(1000 * posts[iter].date);
 					break;
 				}
@@ -170,13 +184,13 @@ const INJECTED_TEMPLATE = `
 				console.log(p + ":" + stat[p]);
 			}
 
-			updateStatView(stat);
+			UpdateStatView(stat);
 		}).catch(r => {
-			updateStatViewError(r);
+			UpdateStatViewError(r);
 		});
 	}
 
-	function updateStatViewError(res) {
+	function UpdateStatViewError(res) {
 		console.log("VK API ERROR:", res);
 
 		let err = "Произошла ошибка!";
@@ -206,13 +220,13 @@ const INJECTED_TEMPLATE = `
 		data.querySelector("#force_update").addEventListener(
 			"click",
 			() => {
-				updateGroupStats(latestGroupID);
+				UpdateGroupStats(latestGroupID);
 			},
 			false
 		);
 	}
 
-	function injectSidebar() {
+	function InjectSidebar() {
 		var name = window.location.pathname.replace("/", "");
 
 		if (name === latestGroupName) {
@@ -253,8 +267,8 @@ const INJECTED_TEMPLATE = `
 			.then(r => {
 				latestGroupID = r.response[0].id;
 
-				getOrUpdatePanel();
-				updateGroupStats(latestGroupID);
+				GetOrUpdatePanel();
+				UpdateGroupStats(latestGroupID);
 			})
 			.catch(r => {
 				console.warn("VK Error:", r);
@@ -262,24 +276,49 @@ const INJECTED_TEMPLATE = `
 			});
 	}
 
-	console.log("VK Group Injected");
+	function Init() {
+		VKREST.Init(SETTINGS.Tokens, { random: SELECT_RANDOM_TOKEN });
+		pageObserver = new MutationObserver(() => {
+			InjectSidebar();
+		});
+		pageObserver.observe(document, { subtree: true, attributes: true });
+		InjectSidebar();
+		isInited = true;
+		console.log("VK STATS Init");
+	}
+
+	function Destroy() {
+
+		isInited = false;
+		latestGroupID = 0;
+		latestGroupName = "";
+		
+		if (pageObserver) {
+			pageObserver.disconnect();
+		}
+
+		if (injectedParentElement && injectedParentElement.parentElement) {
+			injectedParentElement.parentElement.removeChild(injectedParentElement);
+			injectedParentElement = undefined;
+		}
+		console.log("VK STAT Disabled");
+	}
+
 	window.addEventListener(
 		"load",
 		() => {
-
-			VKREST.Init(SETTINGS.Tokens, { random: SELECT_RANDOM_TOKEN });
-			SETTINGS.Init();
-			
-			SETTINGS.onChanged = (e) =>{
-				updateGroupStats(latestGroupID);
-				console.log("CALL");
+			SETTINGS.onChanged = e => {
+				if (e.ENABLED && !isInited) {
+					Init();
+					return;
+				} else if (isInited) {
+					Destroy();
+					return;
+				}
+				UpdateGroupStats(latestGroupID);
 			};
-			
-			const observer = new MutationObserver(() => {
-				injectSidebar();
-			});
-			observer.observe(document, { subtree: true, attributes: true });
-			
+			SETTINGS.Init();
+
 			console.log("hook page reloading");
 		},
 		false
