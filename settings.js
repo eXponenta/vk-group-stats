@@ -1,6 +1,6 @@
 const SETTINGS = (function() {
 	const Tokens = [
-        "Ваши сервисные ключики от приложений"
+		// ваши сервисные ключи
 	];
 
 	let onChanged = e => {};
