@@ -313,8 +313,12 @@ const INJECTED_TEMPLATE = `
 					return;
 				} else if (isInited) {
 					Destroy();
+					if(e.ENABLED) {
+						Init();
+					}
 					return;
 				}
+
 				UpdateGroupStats(latestGroupID);
 			};
 			SETTINGS.Init();
