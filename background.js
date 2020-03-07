@@ -147,7 +147,9 @@ chrome.runtime.onMessage.addListener(({methodName, args = []}, sender, submitRes
 		}
 	}
 
-    Promise.resolve(endpoint(...args)).then((response) => submitResult(response));
+  Promise.resolve(endpoint(...args))
+      .then((response) => submitResult(response))
+      .catch((e)=> submitResult({error: e}));
     
     return true;
 });
