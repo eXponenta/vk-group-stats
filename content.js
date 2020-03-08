@@ -152,7 +152,6 @@ const INJECTED_TEMPLATE = `
 				return b.date - a.date;
 			});
 
-			// if(posts.length < 100) {
 			posts = posts.filter(item => {
 				var data = new Date(1000 * item.date);
 
@@ -165,9 +164,6 @@ const INJECTED_TEMPLATE = `
 
 				return from_date_v <= data && to_date_v > data;
 			});
-
-			console.log(posts);
-			// }
 
 			loader_elem.style.display = "none";
 			data_elem.style.display = "block";
