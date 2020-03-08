@@ -271,9 +271,10 @@ const INJECTED_TEMPLATE = `
 	function InjectSidebar() {
 		var name = window.location.pathname.replace("/", "");
 
-		if (name === latestGroupName) {
+		if (name === latestGroupName && document.querySelector("#injected_element")) {
 			return;
 		}
+		
 		if (RESERVED.indexOf(name) > -1) {
 			latestGroupID = 0;
 			return false;
