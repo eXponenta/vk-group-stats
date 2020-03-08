@@ -3,7 +3,7 @@
 
 ("use strict");
 
-const RESERVED = ["im", "groups", "feed", "friends", "video", "docs", "apps", "search", "vkpay"];
+const RESERVED = ["im", "groups", "feed", "friends", "video", "docs", "apps", "search", "vkpay", "wall"];
 
 const SELECT_RANDOM_TOKEN = true; // true - при инициализации (открытии страницы) буде случайный из набора
 
@@ -271,7 +271,7 @@ const INJECTED_TEMPLATE = `
 			return;
 		}
 		
-		if (RESERVED.indexOf(name) > -1) {
+		if (RESERVED.indexOf(name) > -1 || name.includes("wall")) {
 			latestGroupID = 0;
 			return false;
 		}
@@ -310,7 +310,7 @@ const INJECTED_TEMPLATE = `
 				UpdateGroupStats(latestGroupID);
 			})
 			.catch(r => {
-				console.warn("VK Error:", r);
+				//console.warn("VK Error:", r);
 				//updateStatViewError(r);
 			});
 	}
