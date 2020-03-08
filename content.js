@@ -266,13 +266,19 @@ const INJECTED_TEMPLATE = `
 
 	function InjectSidebar() {
 		var name = window.location.pathname.replace("/", "");
-
-		if (name === latestGroupName && document.querySelector("#injected_element")) {
-			return;
-		}
 		
 		if (RESERVED.indexOf(name) > -1 || name.includes("wall")) {
 			latestGroupID = 0;
+			latestGroupName = undefined;
+			return false;
+		}
+
+		if (name === latestGroupName && document.querySelector("#injected_element")) {
+			return false;
+		}
+
+		// drop if latest group request failed
+		if(name === latestGroupName && latestGroupID ===0) {
 			return false;
 		}
 
@@ -310,17 +316,30 @@ const INJECTED_TEMPLATE = `
 				UpdateGroupStats(latestGroupID);
 			})
 			.catch(r => {
-				//console.warn("VK Error:", r);
+				console.warn("VK Error:", r);
+				
+				latestGroupID = 0;
+
 				//updateStatViewError(r);
 			});
 	}
 
 	function Init() {
+
 		VKREST.Init(SETTINGS.Tokens, { random: SELECT_RANDOM_TOKEN });
+		
+		let debTimer = 0;
+
 		pageObserver = new MutationObserver(() => {
-			InjectSidebar();
+			
+			clearTimeout(debTimer);
+			debTimer = setTimeout(()=>{
+				InjectSidebar();
+			}, 100)
 		});
+		
 		pageObserver.observe(document, { subtree: true, attributes: true });
+		
 		InjectSidebar();
 		isInited = true;
 		console.log("VK STATS Init");
