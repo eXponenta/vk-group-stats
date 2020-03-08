@@ -49,21 +49,40 @@ const INJECTED_TEMPLATE = `
 		}
 
 		return `<div class="page_actions_item" style = "${style || ""}">
-            <span id="label" class="header_label" style="display:inline-block;">${name}:</span>
+            <span id="label" class="header_label" style="display:inline-block;">${name ? name + ":" : ""}</span>
             <span id="value" class="header_count fl_r" style="display:inline-block;">${text}</span>
             </div>`;
 	}
 
 	function UpdateStatView(stat) {
-		let text = CrtItm("Период", Math.round(stat.period) + " д.");
+		let text = "";
+		text += CrtItm("Расчет от", stat.period_from.toLocaleDateString() );
+		text += CrtItm("       до", stat.period_to.toLocaleDateString() );
+		text += CrtItm("Активных дней", Math.round(stat.period) + " д.");
 		text += CrtItm("Постов за период", stat.posts);
 		text += CrtItm("Лайков", stat.likes, stat.likes / stat.views);
 		text += CrtItm("Коммeнты", stat.comments, stat.comments / stat.views);
 		text += CrtItm("Репостов", stat.reposts, stat.reposts / stat.views);
 		text += CrtItm("Просмотры", stat.views); //, stat.views / stat.users);
+	
 		const pp = Math.round(stat.views / stat.posts);
+	
 		text += CrtItm("Просм/пост", pp, pp / stat.users);
 		text += CrtItm("Постов/сутки", (stat.posts / stat.period).toFixed(2));
+
+		text += CrtItm(
+			"Лучие посты",
+			stat.collest.length,
+			undefined, 
+			`font-weight:bolder; border-top:1px #939393 solid; margin-top: 8px`)
+
+		for(let post of stat.collest) {
+			const title = `${post.text.substring(0, 20) || post.id} (${post.er.toFixed(2)}%)`;
+			const body = `<a href="/wall${post.from_id}_${post.id}">${title}</a>`;
+
+			text += CrtItm("", body,);
+		}
+
 		text += CrtItm(
 			"ER",
 			CalcER(stat).toFixed(2) + "%",
@@ -114,7 +133,12 @@ const INJECTED_TEMPLATE = `
 		loader_elem.style.display = "block";
 		data_elem.style.display = "none";
 
-		var now = new Date();
+		
+		const from_date_v = new Date(SETTINGS.params.FROM);
+		const to_date_v = new Date(SETTINGS.params.TO);
+
+		console.log("Grab between", from_date_v, to_date_v);
+		
 		const all = Promise.all([
 			VKREST.wall.get({ owner_id: -id, count: SETTINGS.params.POSTS, extended: 1 }),
 			VKREST.groups.getMembers({ group_id: id })
@@ -131,15 +155,18 @@ const INJECTED_TEMPLATE = `
 			// if(posts.length < 100) {
 			posts = posts.filter(item => {
 				var data = new Date(1000 * item.date);
-				var deltaDays = Date.daysBetween(data, now);
+
 				if (
 					(SETTINGS.params.IGNORE_PINNED && item.is_pinned) ||
 					(SETTINGS.params.IGNORE_ADS && item.marked_as_ads)
 				) {
 					return false;
 				}
-				return deltaDays < SETTINGS.params.PERIOD;
+
+				return from_date_v <= data && to_date_v > data;
 			});
+
+			console.log(posts);
 			// }
 
 			loader_elem.style.display = "none";
@@ -152,9 +179,12 @@ const INJECTED_TEMPLATE = `
 				comments: 0,
 				reposts: 0,
 				views: 0,
-				period: SETTINGS.params.PERIOD,
+				period: from_date_v.daysTo(to_date_v) || 1,
+				period_from : from_date_v,
+				period_to: to_date_v,
 				users: r[1].response.count || 0,
-				posts: posts.length
+				posts: posts.length,
+				collest: []
 			};
 
 			if (posts.length == 0) {
@@ -171,17 +201,29 @@ const INJECTED_TEMPLATE = `
 					break;
 				}
 			}
-			stat.period = Date.daysBetween(stat.firstPost, stat.lastPost);
+			stat.period = stat.firstPost.daysTo(stat.lastPost) || 1;
 
 			posts.forEach(p => {
 				stat.likes += p.likes.count;
 				stat.comments += p.comments.count;
 				stat.reposts += p.reposts.count;
 				stat.views += p.views ? p.views.count : 0; // может отсутствовать
+
+				p.er = CalcER({
+					likes : p.likes.count,
+					reposts : p.reposts.count,
+					comments : p.comments.count,
+					views : p.views ? p.views.count : 0,
+					period: stat.period
+				});
 			});
 
+			posts.sort((a, b) => b.er - a.er);
+
+			stat.collest = posts.slice(0, 3);
+
 			for (var p in stat) {
-				console.log(p + ":" + stat[p]);
+				console.log(p + ":", stat[p]);
 			}
 
 			UpdateStatView(stat);
@@ -333,6 +375,10 @@ const INJECTED_TEMPLATE = `
 
 MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 
+Date.prototype.daysTo = function (date) {
+	return Math.floor(Math.abs(this - date) / (1000 * 60 * 60 * 24)); 
+}
+
 Date.daysBetween = function(date1, date2) {
 	//Get 1 day in milliseconds
 	var one_day = 1000 * 60 * 60 * 24;
@@ -342,8 +388,8 @@ Date.daysBetween = function(date1, date2) {
 	var date2_ms = date2.getTime();
 
 	// Calculate the difference in milliseconds
-	var difference_ms = date2_ms - date1_ms;
+	var difference_ms = Math.abs(date2_ms - date1_ms);
 
 	// Convert back to days and return
-	return difference_ms / one_day;
+	return  Math.floor(difference_ms / one_day);
 };

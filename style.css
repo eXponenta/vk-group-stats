@@ -52,11 +52,33 @@ div.item {
     width: 100%;
 }
 
-div.item > div {
+.footer {
     display: inline-flex;
     flex-direction: column;
     height: 100%;
     justify-content: flex-end;
+}
+
+.item__root {
+  display: flex;
+  flex-direction: column;
+}
+
+.inline__box {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+
+.item__root  .text__small{
+  font-size: 0.75em;
+  align-self: flex-end;
+}
+
+.inline__gap {
+  margin: 0 1em;
 }
 
 div.item > div > a {

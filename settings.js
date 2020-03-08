@@ -1,17 +1,22 @@
 const SETTINGS = (function() {
 	const Tokens = [
-		// ваши сервисные ключи
+		"58eb554658eb554658eb5546d8588cada5558eb58eb554604dc66e3469d0acc0894a5fb"
 	];
 
+	const now = new Date();
+
 	let onChanged = e => {};
+
 
 	let params = {
 		ENABLED: true,
 		POSTS: 100,
-		PERIOD: 60,
+		//PERIOD: 60,
 		IGNORE_ADS: true,
 		IGNORE_PINNED: false,
-		FORMULA: "100 * (likes + 1.5 * reposts + 2 * comments ) / views"
+		FORMULA: "100 * (likes + 1.5 * reposts + 2 * comments ) / views",
+		FROM : new Date(new Date(now).setMonth(now.getMonth() - 1)),
+		TO: now
 	};
 
 	function Init() {
