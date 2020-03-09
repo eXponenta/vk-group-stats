@@ -62,7 +62,9 @@ var VKREST = (function() {
 
   function sendRequest(method, req) {
     if (!TOKENS || TOKENS.length == 0) {
-      throw Error("Api can't inited!");
+      console.error("Api can't inited!");
+      Promise.resolve({error: "Api can't inited!", needsInit : true});
+
     }
 
     let req_text = method + "?";

@@ -365,6 +365,16 @@ const INJECTED_TEMPLATE = `
 		VKREST.groups
 			.getById({ group_id: name })
 			.then(r => {
+				if(r.error) {
+					console.warn(r.error);
+
+					if(r.needsInit) {
+						Destroy();
+						Init();
+						return;
+					}
+				}
+
 				latestGroupID = r.response[0].id;
 
 				GetOrUpdatePanel();
