@@ -48,14 +48,14 @@ var VKREST = (function() {
   function trySend(req, res, rej) {
     createXHR(req, res, r => {
       const delta = currentToken - startToken;
-      if (r.error.error_code == 29 && delta < TOKENS.length) {
+      if ( (r.error.error_code == 29 || r.error.error_code == 28) && delta < TOKENS.length) {
         console.log("TOKEN INVALID:", getCurrentToken());
 
         getNextToken();
         console.log("Try next:", getCurrentToken());
         trySend(req, res, rej);
       } else {
-        rej(r);
+        rej( r.error ? r.error.error_msg : r);
       }
     });
   }
