@@ -258,13 +258,7 @@ const INJECTED_TEMPLATE = `
 				p.like_per_view = 100* (views ?  likes / views : 0);
 				p.comm_per_view = 100* (views ? comments / views : 0);
 
-				p.er = CalcER({
-					likes : likes,
-					reposts : reposts,
-					comments : comments,
-					views : p.views ? p.views.count : 0,
-					period: stat.period
-				});
+				p.er = 100 * views / stat.users;
 			});
 
 			posts.sort((a, b) => b.er - a.er);
@@ -387,23 +381,27 @@ const INJECTED_TEMPLATE = `
 
 	function Init() {
 
-		VKREST.Init(SETTINGS.Tokens, { random: SELECT_RANDOM_TOKEN });
-		
-		let debTimer = 0;
+		VKREST.Init(SETTINGS.Tokens, { random: SELECT_RANDOM_TOKEN })
+		.then(()=>{
 
-		pageObserver = new MutationObserver(() => {
 			
-			clearTimeout(debTimer);
-			debTimer = setTimeout(()=>{
-				InjectSidebar();
-			}, 100)
+			let debTimer = 0;
+
+			pageObserver = new MutationObserver(() => {
+				
+				clearTimeout(debTimer);
+				debTimer = setTimeout(()=>{
+					InjectSidebar();
+				}, 100)
+			});
+			
+			pageObserver.observe(document, { subtree: true, attributes: true });
+			
+			InjectSidebar();
+			isInited = true;
+			console.log("VK STATS Init");
+
 		});
-		
-		pageObserver.observe(document, { subtree: true, attributes: true });
-		
-		InjectSidebar();
-		isInited = true;
-		console.log("VK STATS Init");
 	}
 
 	function Destroy() {
