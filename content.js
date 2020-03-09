@@ -41,16 +41,17 @@ const INJECTED_TEMPLATE = `
 		return eval(cond);
 	}
 
-	function CrtItm(name, value, percent, style) {
+	function CrtItm(name, value, percent, style, className = "") {
 
 		let text = value != undefined ? value.toLocaleString() : "";
 		if (percent) {
 			text += ` (${(100.0 * percent).toFixed(2).toLocaleString()}%)`;
 		}
 
-		return `<div class="page_actions_item" style = "${style || ""}">
-            <span id="label" class="header_label" style="display:inline-block;">${name ? name + ":" : ""}</span>
-            <span id="value" class="header_count fl_r" style="display:inline-block;">${text}</span>
+		return `
+			<div class="page_actions_item ${className}" style = "${style || ""}">
+				<span id="label" class="header_label" style="display:inline-block;">${name ? name + ":" : ""}</span>
+				<span id="value" class="header_count fl_r" style="display:inline-block;">${text}</span>
             </div>`;
 	}
 
@@ -70,19 +71,38 @@ const INJECTED_TEMPLATE = `
 		text += CrtItm("Просм/пост", pp, pp / stat.users);
 		text += CrtItm("Постов/сутки", (stat.posts / stat.period).toFixed(2));
 
-		text += CrtItm(
-			"Лучие посты",
-			stat.collest.length,
-			undefined, 
-			`font-weight:bolder; border-top:1px #939393 solid; margin-top: 8px`)
+		text += `
+			<div style = 'display: flex; justify-content: space-around; border-top:1px #939393 solid;padding: 8px 0;'>
+				<button style='margin:2px' data-target="er" class="flat_button button_wide __wig__select black">ОХВАТ</button>
+				<button style='margin:2px' data-target="like" class="flat_button button_wide __wig__select">ЛАЙКИ</button>
+				<button style='margin:2px' data-target="comm" class="flat_button button_wide __wig__select">КОММЕНТАРИИ</button>
+			</div>`;
+		
 
-		for(let post of stat.collest) {
-			const title = `${post.text.substring(0, 20) || post.id} (${post.er.toFixed(2)}%)`;
+		// for ER
+		for(let post of stat.collest.er) {
+			const title = `${post.text.substring(0, 16) || post.id} (${post.er.toFixed(2)}%)`;
 			const body = `<a href="/wall${post.from_id}_${post.id}">${title}</a>`;
 
-			text += CrtItm("", body,);
+			text += CrtItm("", body, undefined, "display:", "__item __item_type_er");
 		}
+		
+		// likes
+		for(let post of stat.collest.like) {
+			const title = `${post.text.substring(0, 16) || post.id} (${post.like_per_view.toFixed(2)}%)`;
+			const body = `<a href="/wall${post.from_id}_${post.id}">${title}</a>`;
 
+			text += CrtItm("", body, undefined, "display:none;", "__item __item_type_like");
+		}
+		
+		// comments
+		for(let post of stat.collest.comm) {
+			const title = `${post.text.substring(0, 16) || post.id} (${post.comm_per_view.toFixed(2)}%)`;
+			const body = `<a href="/wall${post.from_id}_${post.id}">${title}</a>`;
+
+			text += CrtItm("", body, undefined, "display:none;", "__item __item_type_comm");
+		}
+		
 		text += CrtItm(
 			"ER",
 			CalcER(stat).toFixed(2) + "%",
@@ -93,13 +113,34 @@ const INJECTED_TEMPLATE = `
 		text += `<button id="force_update" class="flat_button button_wide">Обновить</button>`;
 
 		injectedParentElement.querySelector("#data_block").innerHTML = text;
-		injectedParentElement.querySelector("#data_block > #force_update").addEventListener(
+
+		// button
+		injectedParentElement.querySelector("#force_update").addEventListener(
 			"click",
 			() => {
 				UpdateGroupStats(latestGroupID);
 			},
 			false
 		);
+
+		//selectors
+
+		let _latest = injectedParentElement.querySelector(".__wig__select.black");
+
+		injectedParentElement.querySelectorAll(".__wig__select").forEach((e)=>{
+			e.addEventListener("click", ()=>{
+				const target_data = e.dataset.target;
+
+				_latest.classList.toggle("black", false);
+				e.classList.toggle("black", true);
+
+				injectedParentElement.querySelectorAll(".__item").forEach((item)=>{
+					item.style.display = item.classList.contains ("__item_type_" + target_data) ? "" : "none";
+				});
+
+				_latest = e;
+			})
+		})
 	}
 
 	function GetOrUpdatePanel() {
@@ -124,7 +165,7 @@ const INJECTED_TEMPLATE = `
 	}
 
 	// update stats
-	function UpdateGroupStats(id) {
+	function UpdateGroupStats(id, force = false) {
 		if (id <= 0) return;
 
 		var loader_elem = injectedParentElement.querySelector("#loader");
@@ -180,7 +221,11 @@ const INJECTED_TEMPLATE = `
 				period_to: to_date_v,
 				users: r[1].response.count || 0,
 				posts: posts.length,
-				collest: []
+				collest: {
+					er:[],
+					like:[],
+					comm:[]
+				}
 			};
 
 			if (posts.length == 0) {
@@ -200,23 +245,37 @@ const INJECTED_TEMPLATE = `
 			stat.period = stat.firstPost.daysTo(stat.lastPost) || 1;
 
 			posts.forEach(p => {
-				stat.likes += p.likes.count;
-				stat.comments += p.comments.count;
-				stat.reposts += p.reposts.count;
-				stat.views += p.views ? p.views.count : 0; // может отсутствовать
+				const likes = p.likes.count;
+				const comments = p.comments.count;
+				const reposts = p.reposts.count;
+				const views = p.views ? p.views.count : 0;
+
+				stat.likes += likes;
+				stat.comments += comments;
+				stat.reposts += reposts;
+				stat.views += views; // может отсутствовать
+
+				p.like_per_view = 100* (views ?  likes / views : 0);
+				p.comm_per_view = 100* (views ? comments / views : 0);
 
 				p.er = CalcER({
-					likes : p.likes.count,
-					reposts : p.reposts.count,
-					comments : p.comments.count,
+					likes : likes,
+					reposts : reposts,
+					comments : comments,
 					views : p.views ? p.views.count : 0,
 					period: stat.period
 				});
 			});
 
 			posts.sort((a, b) => b.er - a.er);
+			stat.collest.er = posts.slice(0, 3);
 
-			stat.collest = posts.slice(0, 3);
+			
+			posts.sort((a, b) => b.like_per_view - a.like_per_view);
+			stat.collest.like = posts.slice(0, 3);
+
+			posts.sort((a, b) => b.comm_per_view - a.comm_per_view);
+			stat.collest.comm = posts.slice(0, 3);
 
 			for (var p in stat) {
 				console.log(p + ":", stat[p]);
@@ -245,7 +304,9 @@ const INJECTED_TEMPLATE = `
 		}
 
 		injectedParentElement.querySelector("#loader").style.display = "none";
+
 		const data = injectedParentElement.querySelector("#data_block");
+
 		data.style.display = "block";
 		data.innerHTML = `
 		<span style="color: #f15a5a;font-weight: bold;display: block;margin-bottom: 10px;">
