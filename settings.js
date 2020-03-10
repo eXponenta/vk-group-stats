@@ -1,7 +1,7 @@
 const SETTINGS = (function() {
 	const Tokens = [
 		"e0edd766e0edd766e0edd76658e08a2f85ee0ede0edd766be8b7e1a95ff8266d8abb77e",
-		
+		"1306bb541306bb541306bb54d713768b2d113061306bb544d619b6a6ca223065cb69c72"
 	];
 
 	const now = new Date();

@@ -355,7 +355,7 @@ const INJECTED_TEMPLATE = `
 			}
 		}
 		//check club
-		if (name.indexOf("club") > -1) {
+		if (name.indexOf("club") > -1 && name.indexOf("_club") === -1) {
 			tst = name.replace("club", "");
 			if (!isNaN(parseInt(tst, 10))) {
 				name = tst;
