@@ -18,7 +18,7 @@ const INJECTED_TEMPLATE = `
     <div class="module_body" id="loader" style="display:block; text-align:center;">
     <span class="header_label progress_inline"></span>
     </div>
-    <div class="module_body module_header" id="data_block" style="display:none;padding: 15px 5px;"></div>
+    <div class="module_body" id="data_block" style="display:none;padding: 15px 5px;"></div>
     </div>
 
     </aside>`;
